@@ -1,21 +1,21 @@
 {
   "development": {
     "username": "ybrgrybgvgdanu",
-    "password": "9ad431b1e72b70e5262db64a092d66e2cdf2aebe72ee8672723e80f18d7a7cd8\n",
+    "password": "9ad431b1e72b70e5262db64a092d66e2cdf2aebe72ee8672723e80f18d7a7cd8",
     "database": "d1jagrt80fraoc",
     "host": "ec2-52-72-34-184.compute-1.amazonaws.com",
     "dialect": "postgres"
   },
   "test": {
     "username": "ybrgrybgvgdanu",
-    "password": "9ad431b1e72b70e5262db64a092d66e2cdf2aebe72ee8672723e80f18d7a7cd8\n",
+    "password": "9ad431b1e72b70e5262db64a092d66e2cdf2aebe72ee8672723e80f18d7a7cd8",
     "database": "d1jagrt80fraoc",
     "host": "ec2-52-72-34-184.compute-1.amazonaws.com",
     "dialect": "postgres"
   },
   "production": {
     "username": "ybrgrybgvgdanu",
-    "password": "9ad431b1e72b70e5262db64a092d66e2cdf2aebe72ee8672723e80f18d7a7cd8\n",
+    "password": "9ad431b1e72b70e5262db64a092d66e2cdf2aebe72ee8672723e80f18d7a7cd8",
     "database": "d1jagrt80fraoc",
     "host": "ec2-52-72-34-184.compute-1.amazonaws.com",
     "dialect": "postgres"
