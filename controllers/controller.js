@@ -245,5 +245,20 @@ const getTagsOfAnswers = async (answersId) => {
     return answersTagsId
 }
 
+controller.editTestName = (req, res) => {
+    Tests.update(
+        {
+            name: req.body.name
+        },
+
+        {silent: true, returning: true, where: {id: req.body.id}}
+    ).then(r => {
+        console.log('data was updated')
+        res.send('ok!')
+    }).catch(err => {
+        console.log('Error: ' + err)
+    })
+}
+
 
 module.exports = controller;
