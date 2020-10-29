@@ -5,6 +5,8 @@ const Answers = db.Answer
 const Results = db.Result
 const AnswerToTags = db.AnswersToTag
 const ResultToTags = db.ResultToTags
+const ResultsToImage = db.ResultsToImage
+const Images = db.Image
 
 const controller = {}
 
@@ -72,7 +74,7 @@ controller.getResult = async (req, res) => {
                 counter++
             }
         }
-        if (counter / tagsOfResult.length >= 0.8) {
+        if (counter / tagsOfResult.length >= process.env.THRESHOLD) {
             tagMatchRatio[key] = counter / tagsOfResult.length
         }
         counter = 0
@@ -80,41 +82,89 @@ controller.getResult = async (req, res) => {
 
 
 
-    let suitableResult = []
+    let suitableResults = []
 
-    let result;
-    console.log(tagMatchRatio.length)
+    let result = [];
     if (Object.keys(tagMatchRatio).length !== 0) {
         let maxNumber = 0;
         for (let key in tagMatchRatio) {
             if (tagMatchRatio[key] > maxNumber) {
-                suitableResult = []
+                suitableResults = []
                 maxNumber = tagMatchRatio[key]
-                suitableResult.push(key)
+                suitableResults.push(key)
             } else if (tagMatchRatio[key] === maxNumber) {
-                suitableResult.push(key)
+                suitableResults.push(key)
             }
         }
 
-        await Results.findAll({
-            where: {
-                id: suitableResult
-            },
-            attributes: ['test_id', 'imageLink', 'description'],
-            raw: true
-        }).then(r => result = r)
-    } else {
-            await Results.findAll({
+
+        for (let suitableResult of suitableResults) {
+            let singleResult = {}
+
+
+
+            await Results.findOne({
                 where: {
-                    id: 13
+                    id: suitableResult
                 },
-                attributes: ['imageLink', 'description'],
+                attributes: ['test_id',  'description'],
                 raw: true
-            }).then(r => result = r)
+            }).then(async r => {
+                singleResult = {...r}
+                ResultsToImage.belongsTo(Images, {foreignKey: 'image_id', targetKey: 'id'})
+                Images.hasOne(ResultsToImage, {foreignKey: 'image_id'})
+                await Images.findAll({
+                    include: {
+                        model: ResultsToImage,
+                        as: ['resultToImage'],
+                        where: {
+                            result_id: suitableResult
+                        },
+                        attributes: []
+                    },
+                    attributes: ['imageLink'],
+                    raw: true
+                }).then(r => {
+                    singleResult.imagesLinks = r
+                })
+
+            })
+            result.push(singleResult)
+        }
+    } else {
+            let singleObject = {}
+            await Results.findOne({
+                where: {
+                    description: 'No matching results'
+                },
+                attributes: ['id', 'description'],
+                raw: true
+            }).then(async r => {
+                singleObject = {...r}
+                ResultsToImage.belongsTo(Images, {foreignKey: 'image_id', targetKey: 'id'})
+                Images.hasOne(ResultsToImage, {foreignKey: 'image_id'})
+                await Images.findAll({
+                    include: {
+                        model: ResultsToImage,
+                        as: ['resultToImage'],
+                        where: {
+                            result_id: singleObject.id
+                        },
+                        attributes: []
+                    },
+                    attributes: ['imageLink'],
+                    raw: true
+                }).then(images => {
+                    singleObject.imagesLinks = images
+                    result.push(singleObject)
+                })
+
+            })
             result[0].test_id = test_id
 
 
     }
+
 
     res.send(result)
 }
@@ -152,7 +202,6 @@ const getResultsId = async (test_id) => {
             resultsId.push(resultId.id)
         }
     })
-    console.log(resultsId)
     return resultsId
 }
 

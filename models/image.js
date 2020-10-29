@@ -1,9 +1,13 @@
 'use strict';
+const db = require('../models')
+const ResultsToImage = db.ResultsToImage
+
+
 const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Result extends Model {
+  class Image extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,14 +17,13 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   };
-  Result.init({
-    test_id: DataTypes.INTEGER,
-    description: DataTypes.STRING
+  Image.init({
+    imageLink: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'Result',
+    modelName: 'Image',
   });
-  Result.removeAttribute('createdAt');
-  Result.removeAttribute('updatedAt');
-  return Result;
+  Image.removeAttribute('createdAt')
+  Image.removeAttribute('updatedAt')
+  return Image;
 };
