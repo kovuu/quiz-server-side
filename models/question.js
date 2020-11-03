@@ -20,8 +20,10 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Question',
+    timestamps: false
   });
   Question.removeAttribute('createdAt');
   Question.removeAttribute('updatedAt');
+
   return Question;
 };

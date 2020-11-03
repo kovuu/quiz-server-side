@@ -15,8 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   };
   Answer.init({
     question_id: DataTypes.INTEGER,
-    text: DataTypes.STRING,
-    tag_id: DataTypes.INTEGER
+    text: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Answer',

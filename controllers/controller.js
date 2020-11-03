@@ -7,6 +7,7 @@ const AnswerToTags = db.AnswersToTag
 const ResultToTags = db.ResultToTags
 const ResultsToImage = db.ResultsToImage
 const Images = db.Image
+const Tags = db.Tag
 
 const controller = {}
 
@@ -168,6 +169,130 @@ controller.getResult = async (req, res) => {
 
     res.send(result)
 }
+
+controller.getTestData = async (req, res) => {
+    const testId = req.params.id
+
+    const tests = {}
+    await Questions.findAll({
+        where: {
+            test_id: testId
+        },
+        raw: true,
+    }).then(async r => {
+        tests.questions = r
+        const answersList = []
+        for (let i = 0; i < tests.questions.length; i++) {
+            await Answers.findAll({
+                where: {
+                    question_id: tests.questions[i].id
+                },
+                raw: true
+            }).then(async r => {
+                tests.questions[i].answers = r
+                AnswerToTags.belongsTo(Tags, {foreignKey: 'tag_id', targetKey: 'id'})
+                Tags.hasOne(AnswerToTags, {foreignKey: 'tag_id'})
+                for (let j = 0; j < r.length; j++) {
+                   await Tags.findAll({
+                        include: {
+                            model: AnswerToTags,
+                            where: {
+                                answer_id: tests.questions[i].answers[j].id
+                            },
+                            as: 'AnswersToTag',
+                        },
+                        raw: true
+                    }).then(async r => {
+
+                        tests.questions[i].answers[j].tags = r
+                       ResultToTags.belongsTo(Results, {foreignKey: 'result_id', targetKey: 'id'})
+                       Results.hasOne(ResultToTags, {foreignKey: 'result_id'})
+                        for (let tag of r) {
+                            await Results.findAll({
+                                include: {
+                                    model: ResultToTags,
+                                    as: 'ResultToTag',
+                                    where: {
+                                        tag_id: tag.id
+                                    }
+                                },
+                                raw: true
+                            }).then(r => {
+                                tests.questions[i].answers[j].results = r
+                            })
+                        }
+                    })
+
+                }
+            })
+
+        }
+    })
+    tests.results = await Results.findAll({
+        where: {
+            test_id: testId
+        },
+        raw: true
+    })
+    res.send(tests)
+}
+
+controller.addQuestionToTest = async (req, res) => {
+    const question = req.body.question
+    const answers = req.body.answers
+
+    let order = await Questions.findOne({
+        where: {
+            test_id: req.params.id
+        },
+        raw: true,
+        order: [
+            ['order', 'desc']
+        ],
+        attributes: ['order'],
+        limit: 1
+    })
+    order = order.order + 1
+
+    const result = await Questions.create({
+        order: order,
+        test_id: req.params.id,
+        text: question
+    })
+    const questionData = result.dataValues
+
+    for (let answer of answers) {
+
+        let result = await Answers.create({
+            question_id: questionData.id,
+            text: answer.text
+        })
+        const answerResult = result.dataValues
+        result = await Tags.create({
+            name: answer.text
+        })
+
+        const tagResult = result.dataValues
+
+
+        await AnswerToTags.create({
+            answer_id: answerResult.id,
+            tag_id: tagResult.id
+        })
+
+        for (let tag of answer.results) {
+            await ResultToTags.create({
+                tag_id: tagResult.id,
+                result_id: tag
+            })
+        }
+
+    }
+
+    res.send('200')
+}
+
+
 
 const getTestId = async (answers) => {
     let test_id;

@@ -20,5 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'ResultToTags',
   });
+  ResultToTags.removeAttribute('id')
+  ResultToTags.removeAttribute('createdAt')
+  ResultToTags.removeAttribute('updatedAt')
   return ResultToTags;
 };

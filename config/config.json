@@ -4,7 +4,10 @@
     "password": null,
     "database": "quiz",
     "host": "localhost",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "define": {
+      "timestamps": false
+    }
   },
   "test": {
     "username": "",
