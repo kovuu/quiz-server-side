@@ -238,6 +238,7 @@ controller.getTestData = async (req, res) => {
 }
 
 controller.addQuestionToTest = async (req, res) => {
+    console.log(req)
     const question = req.body.question
     const answers = req.body.answers
 
@@ -261,38 +262,145 @@ controller.addQuestionToTest = async (req, res) => {
     })
     const questionData = result.dataValues
 
+    // console.log(answers)
     for (let answer of answers) {
 
-        let result = await Answers.create({
-            question_id: questionData.id,
-            text: answer.text
-        })
-        const answerResult = result.dataValues
-        result = await Tags.create({
-            name: answer.text
-        })
-
-        const tagResult = result.dataValues
-
-
-        await AnswerToTags.create({
-            answer_id: answerResult.id,
-            tag_id: tagResult.id
-        })
-
-        for (let tag of answer.results) {
-            await ResultToTags.create({
-                tag_id: tagResult.id,
-                result_id: tag
-            })
+        const props = {
+            questionId: questionData.id,
+            answerText: answer.text,
+            answerResults: answer.results
         }
+        console.log(props)
+    
+        await addAnswer(props)
+
+       
 
     }
 
     res.send('200')
 }
 
+controller.addAnswerToQuestion = async (req, res) => {
+    const props = {
+        questionId: req.params.questionId,
+        answerText: req.body.answer.text,
+        answerResults: req.body.answer.results
+    }
 
+    await addAnswer(props)
+
+    res.send('302')
+}
+
+
+const addAnswer = async (props) => {
+
+    let result = await Answers.create({
+        question_id: props.questionId,
+        text: props.answerText
+    })
+    const answerResult = result.dataValues
+    result = await Tags.create({
+        name: props.answerText
+    })
+
+    const tagResult = result.dataValues
+
+
+    await AnswerToTags.create({
+        answer_id: answerResult.id,
+        tag_id: tagResult.id
+    })
+
+    for (let result_id of props.answerResults) {
+        await ResultToTags.create({
+            tag_id: tagResult.id,
+            result_id: result_id
+        })
+    }
+}
+
+
+controller.removeQuestionFromTest = async (req, res) => {
+    console.log(22)
+    const questionId = req.params.questionId
+
+    let result = await Answers.findAll({
+        where: {
+            question_id: questionId
+        },
+        raw: true
+    })
+    console.log(result)
+    const answersId = result.map(a => a.id)
+    console.log(answersId)
+
+    for (let answerId of answersId) {
+       await  removeAnswer(answerId)
+    }
+    await Questions.destroy({
+        where: {
+            id: questionId
+        }
+    })
+
+    res.send('300')
+}
+
+controller.removeAnswerFromQuestion = async (req, res) => {
+    const answerId = req.params.answerId
+    const testId = req.params.testId
+    const questionId = req.params.questionId
+
+    removeAnswer(answerId)
+
+
+  
+
+ 
+
+    res.send('300')
+}
+
+const removeAnswer = async (answerId) => {
+    let result =  await AnswerToTags.findAll({
+        where: {
+            answer_id: answerId
+        },
+        raw: true,
+        attributes: ['tag_id']
+    })
+
+    await AnswerToTags.destroy({
+        where: {
+            answer_id: answerId
+        }
+    }) 
+
+    const tagIds = result.map(tag => tag.tag_id)
+    for (let tagId of tagIds) {
+        await ResultToTags.destroy({
+            where: {
+                tag_id: tagId
+            }
+        })
+    }
+
+    await Tags.destroy({
+        where: {
+            id: tagIds
+        }
+    })
+
+    await Answers.destroy({
+        where: {
+            id: answerId
+        }
+    })
+
+
+}
 
 const getTestId = async (answers) => {
     let test_id;
