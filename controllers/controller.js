@@ -217,8 +217,9 @@ controller.getTestData = async (req, res) => {
                                     }
                                 },
                                 raw: true
-                            }).then(r => {
+                            }).then(async r => {
                                 tests.questions[i].answers[j].results = r
+
                             })
                         }
                     })
@@ -228,17 +229,37 @@ controller.getTestData = async (req, res) => {
 
         }
     })
-    tests.results = await Results.findAll({
+    await Results.findAll({
         where: {
             test_id: testId
         },
         raw: true
+    }).then(async r => {
+        tests.results = r
+        console.log(tests.results)
+        ResultsToImage.belongsTo(Images, {foreignKey: 'image_id', targetKey: 'id'})
+        Images.hasOne(ResultsToImage, {foreignKey: 'image_id'})
+        for (let i = 0; i < tests.results.length; i++) {
+            await Images.findAll({
+                include: {
+                    model: ResultsToImage,
+                    as: 'ResultsToImage',
+                    include: [],
+                    where: {
+                        result_id: tests.results[i].id
+                    }
+                },
+                attributes: ['id', 'imageLink'],
+                raw: true,
+            }).then(r => {
+                tests.results[i].images = r
+            })
+        }
     })
     res.send(tests)
 }
 
 controller.addQuestionToTest = async (req, res) => {
-    console.log(req)
     const question = req.body.question
     const answers = req.body.answers
 
@@ -262,7 +283,6 @@ controller.addQuestionToTest = async (req, res) => {
     })
     const questionData = result.dataValues
 
-    // console.log(answers)
     for (let answer of answers) {
 
         const props = {
@@ -270,8 +290,7 @@ controller.addQuestionToTest = async (req, res) => {
             answerText: answer.text,
             answerResults: answer.results
         }
-        console.log(props)
-    
+
         await addAnswer(props)
 
        
@@ -323,7 +342,6 @@ const addAnswer = async (props) => {
 
 
 controller.removeQuestionFromTest = async (req, res) => {
-    console.log(22)
     const questionId = req.params.questionId
 
     let result = await Answers.findAll({
@@ -332,9 +350,7 @@ controller.removeQuestionFromTest = async (req, res) => {
         },
         raw: true
     })
-    console.log(result)
     const answersId = result.map(a => a.id)
-    console.log(answersId)
 
     for (let answerId of answersId) {
        await  removeAnswer(answerId)
@@ -491,6 +507,72 @@ controller.editTestName = (req, res) => {
     }).catch(err => {
         console.log('Error: ' + err)
     })
+}
+
+controller.uploadImage = async (req, res) => {
+    console.log(req)
+    const result_id = req.params.container_id
+    const imageLink = req.file.location
+    let result = await Images.create({
+        imageLink: imageLink
+    })
+
+    const imageId = result.dataValues.id
+    await ResultsToImage.create({
+        result_id: result_id,
+        image_id: imageId
+    })
+    res.send('300')
+}
+
+controller.deleteImageFromResult = async (req, res) => {
+    const result_id = req.params.result_id
+    const image_id = req.params.image_id
+
+    await ResultsToImage.destroy({
+        where: {
+            image_id: image_id,
+            result_id: result_id
+        }
+    })
+
+    res.send('200')
+}
+
+controller.deleteResultFromTest = async (req, res) => {
+    const test_id = req.params.test_id
+    const result_id = req.params.result_id
+
+    await ResultToTags.destroy({
+        where: {
+            result_id: result_id
+        }
+    })
+
+    await ResultsToImage.destroy({
+        where: {
+            result_id: result_id
+        }
+    })
+
+    await Results.destroy({
+        where: {
+            id: result_id
+        }
+    })
+
+    res.send('300')
+}
+
+controller.addResultToTest = async (req, res) => {
+    const test_id = req.params.test_id
+    await Results.create({
+        test_id: test_id,
+        description: req.body.label
+    })
+
+
+    res.send('200')
 }
 
 
