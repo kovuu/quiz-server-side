@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "postgres",
-    "password": null,
-    "database": "quiz",
-    "host": "localhost",
+    "username": "lvfcbijkwizogk",
+    "password": "78aaedd640cacd060483ff077b6196c8f83ad702c910c65673dc832b38dbe60f",
+    "database": "d6srgu415gd173",
+    "host": "ec2-54-147-126-202.compute-1.amazonaws.com",
     "dialect": "postgres",
     "define": {
       "timestamps": false
@@ -17,10 +17,13 @@
     "dialect": "postgres"
   },
   "production": {
-    "username": "",
-    "password": null,
-    "database": "quiz",
-    "host": "localhost",
-    "dialect": "postgres"
+    "username": "lvfcbijkwizogk",
+    "password": "78aaedd640cacd060483ff077b6196c8f83ad702c910c65673dc832b38dbe60f",
+    "database": "d6srgu415gd173",
+    "host": "ec2-54-147-126-202.compute-1.amazonaws.com",
+    "dialect": "postgres",
+    "define": {
+      "timestamps": false
+    }
   }
 }
