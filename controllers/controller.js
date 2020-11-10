@@ -301,10 +301,11 @@ controller.addQuestionToTest = async (req, res) => {
 }
 
 controller.addAnswerToQuestion = async (req, res) => {
+    console.log(req.body)
     const props = {
         questionId: req.params.questionId,
-        answerText: req.body.answer.text,
-        answerResults: req.body.answer.results
+        answerText: req.body.text,
+        answerResults: req.body.results
     }
 
     await addAnswer(props)
